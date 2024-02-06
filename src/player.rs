@@ -2,17 +2,26 @@ use bevy::prelude::*;
 
 pub struct PlayerPlugin;
 
+#[derive(Resource)]
+struct CameraOffset(Vec3);
+
+#[derive(Resource)]
+struct LightOffset(Vec3);
+
 #[derive(Component)]
 struct Player {
     input_direction: Vec3,
 }
+
+#[derive(Component)]
+struct Ground;
 
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn(Camera2dBundle::default());
+    // player
     commands.spawn((
         Player {
             input_direction: Vec3::ZERO,
@@ -24,21 +33,36 @@ fn setup(
             ..default()
         },
     ));
+    // cube
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Circle::new(4.0).into()),
-        material: materials.add(Color::WHITE.into()),
-        transform: Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        material: materials.add(Color::rgb_u8(25, 25, 255).into()),
+        transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..default()
     });
+    // ground
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(shape::Circle::new(40.0).into()),
+            material: materials.add(Color::WHITE.into()),
+            transform: Transform::from_rotation(Quat::from_rotation_x(
+                -std::f32::consts::FRAC_PI_2,
+            )),
+            ..default()
+        },
+        Ground,
+    ));
+    // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 1500.0,
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+        transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..default()
     });
+    // camera
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
@@ -47,19 +71,25 @@ fn setup(
 
 fn follow_player_with_camera(
     player_transforms: Query<&Transform, With<Player>>,
-    mut camera_transforms: Query<&mut Transform, With<Camera>>,
+    camera_offset: Res<CameraOffset>,
+    mut camera_transforms: Query<
+        &mut Transform,
+        (With<Camera3d>, Without<Player>, Without<PointLight>),
+    >,
+    light_offset: Res<LightOffset>,
+    mut light_transforms: Query<
+        &mut Transform,
+        (With<PointLight>, Without<Player>, Without<Camera3d>),
+    >,
 ) {
     let player_transform = player_transforms.get_single().unwrap();
     let mut camera_transform = camera_transforms.get_single_mut().unwrap();
+    let mut light_transform = light_transforms.get_single_mut().unwrap();
 
-    let offset = Vec3 {
-        x: -2.5,
-        y: 4.5,
-        z: 9.0,
-    };
-    // let camera_position = offset + player_transform.
-    // camera_transform.
-    // .looking_at(Vec3::ZERO, Vec3::Y)
+    camera_transform.translation = player_transform.translation + camera_offset.0;
+    camera_transform.look_at(player_transform.translation, Vec3::Y);
+
+    light_transform.translation = player_transform.translation + light_offset.0;
 }
 
 fn walk_player(
@@ -68,7 +98,7 @@ fn walk_player(
     mut player_transforms: Query<&mut Transform, With<Player>>,
     mut players: Query<&mut Player>,
 ) {
-    let mut player = players.get_single_mut().unwrap();
+    let mut player = players.single_mut();
     player.input_direction = Vec3::ZERO;
 
     if keyboard_input.pressed(KeyCode::A) {
@@ -91,35 +121,65 @@ fn walk_player(
     let normalized_direction =
         player.input_direction.normalize() * (Vec3::splat(10.) * time.delta_seconds());
 
-    match player_transforms.get_single_mut() {
-        Err(error) => println!("Can't find player transform: {}", error),
-        Ok(mut transform) => {
-            transform.translation.x += normalized_direction.x;
-            transform.translation.z += normalized_direction.z;
-        }
-    }
+    let mut transform = player_transforms.single_mut();
+    transform.translation.x += normalized_direction.x / 2.0 - normalized_direction.z / 2.0;
+    transform.translation.z += normalized_direction.x / 2.0 + normalized_direction.z / 2.0;
 }
 
-// fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Name, With<Person>>) {
-//     if timer.0.tick(time.delta()).just_finished() {
-//         for name in &query {
-//             println!("hello {}!", name.0);
-//         }
-//     }
-// }
+fn draw_selector(
+    camera_query: Query<(&Camera, &GlobalTransform)>,
+    ground_query: Query<&GlobalTransform, With<Ground>>,
+    windows: Query<&Window>,
+    mut gizmos: Gizmos,
+) {
+    let (camera, camera_transform) = camera_query.single();
+    let ground = ground_query.single();
 
-// fn update_people(mut query: Query<&mut Name, With<Person>>) {
-//     for mut name in &mut query {
-//         if name.0 == "Elaina Proctor" {
-//             name.0 = "Elaina Hume".to_string();
-//             break; // We don’t need to change any other names
-//         }
-//     }
-// }
+    let Some(cursor_position) = windows.single().cursor_position() else {
+        return;
+    };
+
+    // Calculate a ray pointing from the camera into the world based on the cursor's position.
+    let Some(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
+        return;
+    };
+
+    // Calculate if and where the ray is hitting the ground plane.
+    let Some(distance) = ray.intersect_plane(ground.translation(), ground.back()) else {
+        return;
+    };
+    let point = ray.get_point(distance);
+
+    let snapped_point = point.round();
+
+    // Draw a circle just above the ground plane at that position.
+    gizmos.rect(
+        snapped_point + ground.back() * 0.01,
+        Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2),
+        Vec2::splat(1.0),
+        Color::WHITE,
+    );
+}
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(Update, (walk_player, follow_player_with_camera).chain());
+        app.insert_resource(CameraOffset(Vec3 {
+            x: -9.0,
+            y: 9.0,
+            z: 9.0,
+        }))
+        .insert_resource(LightOffset(Vec3 {
+            x: 1.0,
+            y: 10.0,
+            z: 4.0,
+        }))
+        .add_systems(Startup, setup)
+        .add_systems(
+            Update,
+            (
+                (walk_player, follow_player_with_camera).chain(),
+                draw_selector,
+            ),
+        );
     }
 }
