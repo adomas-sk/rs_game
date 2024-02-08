@@ -14,3 +14,4 @@ opt-level = 3
 [dependencies]
 bevy = { version = "0.12.1" }
 bevy_rapier3d = { version = "0.24.0", features = ["parallel"] }
+rand = "0.8.5"
