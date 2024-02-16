@@ -7,6 +7,7 @@ mod minion;
 mod player;
 mod selector;
 mod shared_resources;
+mod attack;
 
 fn main() {
     App::new()
@@ -17,6 +18,7 @@ fn main() {
         .add_plugins(selector::SelectorPlugin)
         .add_plugins(minion::MinionPlugin)
         .add_plugins(enemy::EnemyPlugin)
+        .add_plugins(attack::AttackPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins(RapierDebugRenderPlugin::default())
         .run();

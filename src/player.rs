@@ -1,7 +1,7 @@
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier3d::prelude::*;
 
-use crate::shared_resources::Gravity;
+use crate::{attack::spawn_projectile, shared_resources::Gravity};
 
 pub struct PlayerPlugin;
 
@@ -67,6 +67,7 @@ fn follow_player(
     camera_transform.look_at(player_transform.translation, Vec3::Y);
 
     light_transform.translation = player_transform.translation + light_offset.0;
+    light_transform.look_at(player_transform.translation, Vec3::Y);
 }
 
 fn move_player(
@@ -110,6 +111,31 @@ fn move_player(
     controller.translation = Some(final_velocity);
 }
 
+fn create_projectile(
+    commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        spawn_projectile(
+            commands,
+            meshes,
+            materials,
+            Vec3 {
+                x: 0.0,
+                y: 2.0,
+                z: 0.0,
+            },
+            Vec3 {
+                x: 10.0,
+                y: 1.0,
+                z: 10.0,
+            },
+        )
+    }
+}
+
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Gravity(Vec3::NEG_Y * 5.0))
@@ -125,6 +151,7 @@ impl Plugin for PlayerPlugin {
             }))
             .add_systems(Startup, setup_player)
             .add_systems(Update, move_player)
+            .add_systems(Update, create_projectile)
             .add_systems(
                 PostUpdate,
                 follow_player
