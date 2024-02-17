@@ -7,42 +7,44 @@ use crate::{enemy::Enemy, player::Player, shared_resources::Gravity};
 pub struct MinionPlugin;
 
 #[derive(Component)]
+struct MinionModel;
+
+#[derive(Component)]
 pub struct Minion {
     roam_timer: Timer,
     roam_direction: Vec3,
-    roam_on: bool,
 }
 
 const FOLLOW_DISTANCE: f32 = 5.0;
 const ATTACK_DISTANCE: f32 = 10.0;
 const SPEED: f32 = 7.0;
 
-fn setup_minion(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn setup_minion(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(Minion {
             roam_timer: Timer::from_seconds(2.0, TimerMode::Repeating),
             roam_direction: Vec3::ZERO,
-            roam_on: false,
         })
-        .insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb_u8(124, 255, 124).into()),
-            ..default()
-        })
-        .insert(TransformBundle::from(Transform::from_xyz(2.0, 2.0, 2.0)))
+        .insert(TransformBundle::from(Transform::from_xyz(2.0, 1.0, 2.0)))
         .insert(RigidBody::KinematicPositionBased)
         .insert(KinematicCharacterController::default())
-        .insert(Collider::cuboid(0.5, 0.5, 0.5));
+        .insert(Collider::ball(0.5))
+        .with_children(|parent| {
+            parent.spawn(MinionModel).insert(SceneBundle {
+                scene: asset_server.load("minion.glb#Scene0"),
+                transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3 {
+                    x: 0.5,
+                    y: 0.5,
+                    z: 0.5,
+                }),
+                ..default()
+            });
+        });
 }
 
 fn change_roam_direction(time: Res<Time>, mut minion_query: Query<&mut Minion>) {
     for mut minion in &mut minion_query {
         if minion.roam_timer.tick(time.delta()).just_finished() {
-            minion.roam_on = true;
             minion.roam_direction = Vec3 {
                 x: (random::<f32>() * 2.0) - 1.0,
                 y: 0.0,
@@ -57,35 +59,30 @@ fn update_minion(
     time: Res<Time>,
     gravity: Res<Gravity>,
     mut minion_query: Query<
-        (
-            &mut Minion,
-            &GlobalTransform,
-            &mut KinematicCharacterController,
-        ),
+        (&Minion, &GlobalTransform, &mut KinematicCharacterController),
         With<Minion>,
     >,
+    mut model_transform_query: Query<&mut Transform, With<MinionModel>>,
     enemy_query: Query<&GlobalTransform, With<Enemy>>,
     player_query: Query<&GlobalTransform, With<Player>>,
 ) {
-    for (mut minion, minion_global_transform, mut controller) in &mut minion_query {
+    for (minion, minion_global_transform, mut controller) in &mut minion_query {
         let delta_gravity = gravity.0 * time.delta_seconds();
 
-        let player_transform = match player_query.get_single() {
-            Ok(player) => player,
-            Err(err) => {
-                println!("Error: Something wrong with player! {}", err);
-                panic!();
-            }
-        };
+        let player_transform = player_query.single();
+        let mut model_transform = model_transform_query.single_mut();
 
         // Always follow player
         let distance = player_transform
             .translation()
             .distance(minion_global_transform.translation());
         if distance > FOLLOW_DISTANCE {
-            let direction = player_transform.translation() - minion_global_transform.translation();
-            let velocity = direction.normalize() * (Vec3::splat(SPEED) * time.delta_seconds());
+            let direction = (player_transform.translation()
+                - minion_global_transform.translation())
+            .normalize();
+            let velocity = direction * (Vec3::splat(SPEED) * time.delta_seconds());
             controller.translation = Some(velocity + delta_gravity);
+            rotate_model(&mut model_transform, &direction);
             return;
         }
 
@@ -95,32 +92,45 @@ fn update_minion(
                 .translation()
                 .distance(minion_global_transform.translation());
             if distance < ATTACK_DISTANCE {
-                let direction =
-                    enemy_transform.translation() - minion_global_transform.translation();
-                let velocity = direction.normalize() * (Vec3::splat(SPEED) * time.delta_seconds());
+                let direction = (enemy_transform.translation()
+                    - minion_global_transform.translation())
+                .normalize();
+                let velocity = direction * (Vec3::splat(SPEED) * time.delta_seconds());
                 controller.translation = Some(velocity + delta_gravity);
+                rotate_model(&mut model_transform, &direction);
                 return;
             }
         }
 
         // If close enough, roam
-        if minion.roam_on {
-            let target =
-                player_transform.translation() + (minion.roam_direction * (FOLLOW_DISTANCE * 0.8));
-            let distance = minion_global_transform.translation().distance(target);
-            if distance > 1.5 {
-                let direction = target - minion_global_transform.translation();
-                let velocity = direction.normalize() * (Vec3::splat(SPEED) * time.delta_seconds());
-                controller.translation = Some(velocity + delta_gravity);
-                return;
-            } else {
-                minion.roam_on = false;
-            }
+        let target =
+            player_transform.translation() + (minion.roam_direction * (FOLLOW_DISTANCE * 0.8));
+        let distance = minion_global_transform.translation().distance(target);
+        if distance > 1.5 {
+            let direction = (target - minion_global_transform.translation()).normalize();
+            let velocity = direction * (Vec3::splat(SPEED) * time.delta_seconds());
+            controller.translation = Some(velocity + delta_gravity);
+            rotate_model(&mut model_transform, &direction);
+            return;
         }
 
         // Finally apply gravity
         controller.translation = Some(delta_gravity);
     }
+}
+
+fn rotate_model(model_transform: &mut Transform, direction: &Vec3) {
+    if direction.length() <= 0.0 {
+        return;
+    }
+    model_transform.look_at(
+        Vec3 {
+            x: direction.z,
+            y: 0.0,
+            z: -direction.x,
+        },
+        Vec3::Y,
+    );
 }
 
 impl Plugin for MinionPlugin {

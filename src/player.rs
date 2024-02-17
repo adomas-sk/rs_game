@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier3d::prelude::*;
 
@@ -14,25 +16,36 @@ struct LightOffset(Vec3);
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Component)]
+pub struct PlayerModel;
+
+#[derive(Resource)]
+struct PlayerAnimations(Vec<Handle<AnimationClip>>);
+
 const SPEED: f32 = 10.0;
 
-fn setup_player(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // animations
+    commands.insert_resource(PlayerAnimations(vec![
+        asset_server.load("player/player.glb#Animation0"),
+        asset_server.load("player/player.glb#Animation1"),
+    ]));
+
     // player
     commands
         .spawn(Player)
-        .insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb_u8(124, 144, 255).into()),
-            ..default()
-        })
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 2.0, 0.0)))
+        .insert(InheritedVisibility::default())
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, 1.0, 0.0)))
         .insert(RigidBody::KinematicPositionBased)
         .insert(KinematicCharacterController::default())
-        .insert(Collider::cuboid(0.5, 0.5, 0.5));
+        .insert(Collider::cuboid(0.5, 0.5, 0.5))
+        .with_children(|parent| {
+            parent.spawn(PlayerModel).insert(SceneBundle {
+                scene: asset_server.load("player/player.glb#Scene0"),
+                transform: Transform::from_xyz(0.0, -0.5, 0.0),
+                ..default()
+            });
+        });
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -71,6 +84,9 @@ fn follow_player(
 }
 
 fn move_player(
+    animations: Res<PlayerAnimations>,
+    mut animation_player_query: Query<&mut AnimationPlayer>,
+    mut transform_query: Query<&mut Transform, With<PlayerModel>>,
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
     gravity: Res<Gravity>,
@@ -79,6 +95,7 @@ fn move_player(
     let mut controller = controllers.single_mut();
 
     let mut input_direction = Vec3::ZERO;
+    // Collect input
     if keyboard_input.pressed(KeyCode::A) {
         input_direction.x -= 1.0;
     }
@@ -92,6 +109,52 @@ fn move_player(
         input_direction.z += 1.0;
     }
 
+    let is_moving = input_direction.length() > 0.0;
+
+    // Update animation
+    for mut animation_player in &mut animation_player_query {
+        if is_moving {
+            if !animation_player.is_playing_clip(&animations.0[0]) {
+                animation_player
+                    .play_with_transition(animations.0[0].clone_weak(), Duration::from_millis(250))
+                    .repeat();
+            }
+        } else {
+            if !animation_player.is_playing_clip(&animations.0[1]) {
+                animation_player
+                    .play_with_transition(animations.0[1].clone_weak(), Duration::from_millis(250))
+                    .repeat();
+            }
+        }
+    }
+
+    // rotate direction to how player sees world
+    let rotated_to_camera_view_direction = Vec3 {
+        x: (input_direction.x / 2.0 - input_direction.z / 2.0),
+        y: 0.0,
+        z: (input_direction.x / 2.0 + input_direction.z / 2.0),
+    };
+
+    // rotate model
+    if is_moving {
+        let mut child_transform = transform_query.single_mut();
+        child_transform.look_at(
+            rotated_to_camera_view_direction
+                * Vec3 {
+                    x: -1.0,
+                    y: 0.0,
+                    z: -1.0,
+                }
+                + Vec3 {
+                    x: 0.0,
+                    y: -0.5,
+                    z: 0.0,
+                },
+            Vec3::Y,
+        );
+    }
+
+    // calculate velocity and update controller
     let delta_gravity = gravity.0 * time.delta_seconds();
 
     if input_direction.length() < 0.01 {
@@ -99,14 +162,10 @@ fn move_player(
         return;
     }
 
-    // TODO: Rest of this should probably be in FixedUpdate
-    let input_velocity = input_direction.normalize() * (Vec3::splat(SPEED) * time.delta_seconds());
+    let input_velocity =
+        rotated_to_camera_view_direction.normalize() * (Vec3::splat(SPEED) * time.delta_seconds());
 
-    let final_velocity = Vec3 {
-        x: (input_velocity.x / 2.0 - input_velocity.z / 2.0) + delta_gravity.x,
-        y: 0.0 + delta_gravity.y,
-        z: (input_velocity.x / 2.0 + input_velocity.z / 2.0) + delta_gravity.z,
-    };
+    let final_velocity = input_velocity + delta_gravity;
 
     controller.translation = Some(final_velocity);
 }
