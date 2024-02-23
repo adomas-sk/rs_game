@@ -25,6 +25,7 @@ fn setup_minion(mut commands: Commands, asset_server: Res<AssetServer>) {
             roam_timer: Timer::from_seconds(2.0, TimerMode::Repeating),
             roam_direction: Vec3::ZERO,
         })
+        .insert(InheritedVisibility::default())
         .insert(TransformBundle::from(Transform::from_xyz(2.0, 1.0, 2.0)))
         .insert(RigidBody::KinematicPositionBased)
         .insert(KinematicCharacterController::default())
