@@ -14,8 +14,14 @@ fn setup_ground(
     commands
         .spawn(Ground)
         .insert(PbrBundle {
-            mesh: meshes.add(shape::Box::new(40.0, 1.0, 40.0).into()),
-            material: materials.add(Color::WHITE.into()),
+            mesh: meshes.add(Cuboid {
+                half_size: Vec3 {
+                    x: 20.0,
+                    y: 0.5,
+                    z: 20.0,
+                },
+            }),
+            material: materials.add(Color::WHITE),
             ..default()
         })
         .insert(RigidBody::Fixed)
@@ -25,8 +31,8 @@ fn setup_ground(
     // cube
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb_u8(25, 25, 255).into()),
+            mesh: meshes.add(Mesh::from(Cuboid::from_size(Vec3::splat(1.0)))),
+            material: materials.add(Color::rgb_u8(25, 25, 255)),
             transform: Transform::from_xyz(0.0, 1.0, 0.0),
             ..default()
         })

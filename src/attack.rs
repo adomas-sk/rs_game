@@ -26,11 +26,8 @@ pub fn spawn_projectile(
             target: target,
         })
         .insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 0.25,
-                ..default()
-            })),
-            material: materials.add(Color::rgb_u8(229, 220, 41).into()),
+            mesh: meshes.add(Mesh::from(Sphere { radius: 0.25 })),
+            material: materials.add(Color::rgb_u8(229, 220, 41)),
             ..default()
         })
         .insert(TransformBundle::from(Transform::from_translation(source)))
@@ -46,7 +43,10 @@ fn update_projectile(
         if projectile.time_alive.tick(time.delta()).just_finished() {
             commands.entity(entity).despawn();
         }
-        transform.translation = projectile.source.lerp(projectile.target, 1.0 -projectile.time_alive.percent_left());
+        transform.translation = projectile.source.lerp(
+            projectile.target,
+            1.0 - projectile.time_alive.fraction_remaining(),
+        );
     }
 }
 

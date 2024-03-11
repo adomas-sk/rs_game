@@ -35,10 +35,10 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(Player)
         .insert(InheritedVisibility::default())
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 1.0, 0.0)))
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, 2.0, 0.0)))
         .insert(RigidBody::KinematicPositionBased)
         .insert(KinematicCharacterController::default())
-        .insert(Collider::cuboid(0.5, 0.5, 0.5))
+        .insert(Collider::ball(1.0))
         .with_children(|parent| {
             parent.spawn(PlayerModel).insert(SceneBundle {
                 scene: asset_server.load("player/player.glb#Scene0"),
@@ -49,7 +49,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
-            intensity: 1500.0,
+            intensity: 150000.0,
+            range: 100.0,
             shadows_enabled: true,
             ..default()
         },
@@ -88,7 +89,7 @@ fn move_player(
     mut animation_player_query: Query<&mut AnimationPlayer>,
     mut transform_query: Query<&mut Transform, With<PlayerModel>>,
     time: Res<Time>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     gravity: Res<Gravity>,
     mut controllers: Query<&mut KinematicCharacterController, With<Player>>,
 ) {
@@ -96,16 +97,16 @@ fn move_player(
 
     let mut input_direction = Vec3::ZERO;
     // Collect input
-    if keyboard_input.pressed(KeyCode::A) {
+    if keyboard_input.pressed(KeyCode::KeyA) {
         input_direction.x -= 1.0;
     }
-    if keyboard_input.pressed(KeyCode::D) {
+    if keyboard_input.pressed(KeyCode::KeyD) {
         input_direction.x += 1.0;
     }
-    if keyboard_input.pressed(KeyCode::W) {
+    if keyboard_input.pressed(KeyCode::KeyW) {
         input_direction.z -= 1.0;
     }
-    if keyboard_input.pressed(KeyCode::S) {
+    if keyboard_input.pressed(KeyCode::KeyS) {
         input_direction.z += 1.0;
     }
 
@@ -174,7 +175,7 @@ fn create_projectile(
     commands: Commands,
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         spawn_projectile(
@@ -205,8 +206,8 @@ impl Plugin for PlayerPlugin {
             }))
             .insert_resource(LightOffset(Vec3 {
                 x: 1.0,
-                y: 10.0,
-                z: 4.0,
+                y: 4.0,
+                z: 2.0,
             }))
             .add_systems(Startup, setup_player)
             .add_systems(Update, move_player)

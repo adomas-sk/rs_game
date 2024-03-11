@@ -19,8 +19,8 @@ fn setup_enemy(
     commands
         .spawn(Enemy)
         .insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb_u8(255, 124, 124).into()),
+            mesh: meshes.add(Mesh::from(Cuboid { half_size: Vec3::splat(0.5) })),
+            material: materials.add(Color::rgb_u8(255, 124, 124)),
             ..default()
         })
         .insert(TransformBundle::from(Transform::from_xyz(

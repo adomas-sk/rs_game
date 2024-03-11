@@ -24,7 +24,8 @@ fn draw_selector(
         return;
     };
 
-    let Some(distance) = ray.intersect_plane(ground.translation(), ground.up()) else {
+    let Some(distance) = ray.intersect_plane(ground.translation(), Plane3d::new(ground.up()))
+    else {
         return;
     };
     let point = ray.get_point(distance);
