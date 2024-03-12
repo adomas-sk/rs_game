@@ -1,7 +1,7 @@
 use bevy::{ecs::query::QuerySingleError, prelude::*};
 use bevy_rapier3d::prelude::*;
 
-use crate::{minion::Minion, player::Player, shared_resources::Gravity};
+use crate::{minions::following::Minion, player::Player, shared_resources::Gravity};
 
 pub struct EnemyPlugin;
 

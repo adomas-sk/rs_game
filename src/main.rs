@@ -3,7 +3,9 @@ use bevy_rapier3d::prelude::*;
 
 mod enemy;
 mod ground;
-mod minion;
+mod minions;
+mod resources;
+mod buildings;
 mod player;
 mod selector;
 mod shared_resources;
@@ -16,7 +18,10 @@ fn main() {
         .add_plugins(ground::GroundPlugin)
         .add_plugins(player::PlayerPlugin)
         .add_plugins(selector::SelectorPlugin)
-        .add_plugins(minion::MinionPlugin)
+        // .add_plugins(minions::following::MinionPlugin)
+        .add_plugins(buildings::BuildingsPlugin)
+        .add_plugins(resources::ResourcesPlugin)
+        .add_plugins(minions::gathering::GatheringMinionPlugin)
         .add_plugins(enemy::EnemyPlugin)
         .add_plugins(attack::AttackPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
