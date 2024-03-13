@@ -16,5 +16,6 @@ bevy_dylib = { version = "0.13.0" }
 
 [dependencies]
 bevy = { version = "0.13.0" }
+bevy_mod_picking = "0.18.2"
 bevy_rapier3d = { version = "0.25.0" }
 rand = "0.8.5"

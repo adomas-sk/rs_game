@@ -1,3 +1,5 @@
+use crate::shared_resources::Hydrogen;
+
 use super::super::buildings::gathering_post::GatheringPostBuilding;
 use super::super::resources::hydrogen::HydrogenResource;
 use bevy::prelude::*;
@@ -96,6 +98,7 @@ fn find_and_go_to<'a, I>(
 
 fn update_minion(
     time: Res<Time>,
+    mut hydrogen: ResMut<Hydrogen>,
     mut minion_query: Query<(
         &mut GatheringMinion,
         &mut KinematicCharacterController,
@@ -119,7 +122,6 @@ fn update_minion(
             GatheringMinionState::Gathering => {
                 if minion.work_timer.tick(time.delta()).just_finished() {
                     minion.resource_gathered += 1;
-                    println!("Gathered resources: {}", minion.resource_gathered);
                     if minion.resource_gathered == MAX_GATHERED {
                         minion.state = GatheringMinionState::GoingToPost;
                     }
@@ -138,7 +140,7 @@ fn update_minion(
             GatheringMinionState::Depositing => {
                 if minion.work_timer.tick(time.delta()).just_finished() {
                     minion.resource_gathered -= 1;
-                    println!("Resources to deposit: {}", minion.resource_gathered);
+                    hydrogen.0 += 1;
                     if minion.resource_gathered == 0 {
                         minion.state = GatheringMinionState::GoingToResource;
                     }

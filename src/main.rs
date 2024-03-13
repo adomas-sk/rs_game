@@ -1,10 +1,12 @@
 use bevy::prelude::*;
+use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_rapier3d::prelude::*;
 
 mod enemy;
 mod ground;
 mod minions;
 mod resources;
+mod ui;
 mod buildings;
 mod player;
 mod selector;
@@ -24,7 +26,9 @@ fn main() {
         .add_plugins(minions::gathering::GatheringMinionPlugin)
         .add_plugins(enemy::EnemyPlugin)
         .add_plugins(attack::AttackPlugin)
+        .add_plugins(ui::UIPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins(RapierDebugRenderPlugin::default())
+        .add_plugins(DefaultPickingPlugins)
         .run();
 }

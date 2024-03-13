@@ -6,11 +6,11 @@
 
 #### Stage 1
 
-- [ ] Create entity that would serve as gathering post
-  - [ ] Store gathered resources
-  - [ ] Display gathered resources in GUI
+- [x] Create entity that would serve as gathering post
+  - [x] Store gathered resources
+  - [x] Display gathered resources in GUI
 - [ ] Create entity that would serve as minion assembly
-  - [ ] Display assembleable minions in GUI
+  - [x] Display assembleable minions in GUI
   - [ ] Allow user to click on minion to build it
   - [ ] Minion would be stored as inventory of some sort (should be reflected in GUI)
 - [ ] Create entity that would serve as Power totem
