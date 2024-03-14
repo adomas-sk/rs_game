@@ -23,8 +23,5 @@ pub static TRANSLATIONS: Translations = Translations {
     hydrogen: "Hydrogen: ",
 };
 
-#[derive(PartialEq)]
-pub enum Buildings {
-    None = 0,
-    MinionAssembly = 1,
-}
+#[derive(Component)]
+pub struct BuildingUI;

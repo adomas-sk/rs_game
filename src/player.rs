@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier3d::prelude::*;
 
-use crate::{attack::spawn_projectile, shared_resources::Gravity};
+use crate::{attack::spawn_projectile, shared::Gravity};
 
 pub struct PlayerPlugin;
 

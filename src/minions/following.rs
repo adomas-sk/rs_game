@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use rand::prelude::*;
 
-use crate::{enemy::Enemy, player::Player, shared_resources::Gravity};
+use crate::{enemy::Enemy, player::Player, shared::Gravity};
 
 pub struct MinionPlugin;
 

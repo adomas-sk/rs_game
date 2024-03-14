@@ -2,15 +2,17 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::minion_assembly::OpenMinionAssemblyUI,
-    shared_resources::{Hydrogen, TRANSLATIONS},
+    buildings::minion_assembly::{
+        minion_assembly_ui, DeselectBuilding, MinionAssemblyUI, SelectBuilding,
+    },
+    shared::{BuildingUI, Hydrogen, TRANSLATIONS},
 };
 
 #[derive(Component)]
 struct HydrogenCounter;
 
 #[derive(Component)]
-struct BuildingUI;
+pub struct BuildingUIContainer;
 
 pub struct UIPlugin;
 
@@ -54,9 +56,30 @@ fn button_system(
     }
 }
 
-fn update_building_ui(mut building_ui_query: Query<&mut Style, With<BuildingUI>>) {
+fn open_building_ui(
+    mut building_ui_query: Query<&mut Style, With<BuildingUIContainer>>,
+    mut minion_assembly_query: Query<
+        &mut Style,
+        (With<MinionAssemblyUI>, Without<BuildingUIContainer>),
+    >,
+) {
     let mut style = building_ui_query.single_mut();
     style.display = Display::Flex;
+
+    let mut ms_style = minion_assembly_query.single_mut();
+    ms_style.display = Display::Flex;
+}
+
+fn close_building_ui(
+    mut building_ui_query: Query<&mut Style, With<BuildingUIContainer>>,
+    mut uis_query: Query<&mut Style, (With<BuildingUI>, Without<BuildingUIContainer>)>,
+) {
+    let mut style = building_ui_query.single_mut();
+    style.display = Display::None;
+
+    for mut ui_style in &mut uis_query {
+        ui_style.display = Display::None;
+    }
 }
 
 fn update_hydrogen_counter(
@@ -126,7 +149,7 @@ fn setup_ui(mut commands: Commands) {
         });
     // Building UI
     commands
-        .spawn(BuildingUI)
+        .spawn(BuildingUIContainer)
         .insert((
             NodeBundle {
                 style: Style {
@@ -151,14 +174,7 @@ fn setup_ui(mut commands: Commands) {
             NoDeselect,
         ))
         .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "Minion assembly",
-                TextStyle {
-                    font_size: 20.0,
-                    color: Color::rgb(0.9, 0.9, 0.9),
-                    ..default()
-                },
-            ));
+            minion_assembly_ui(parent);
         });
 }
 
@@ -169,7 +185,11 @@ impl Plugin for UIPlugin {
             .add_systems(Update, update_hydrogen_counter)
             .add_systems(
                 Update,
-                update_building_ui.run_if(on_event::<OpenMinionAssemblyUI>()),
+                close_building_ui.run_if(on_event::<DeselectBuilding>()),
+            )
+            .add_systems(
+                Update,
+                open_building_ui.run_if(on_event::<SelectBuilding>()),
             );
     }
 }

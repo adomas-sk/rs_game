@@ -10,13 +10,13 @@ mod ui;
 mod buildings;
 mod player;
 mod selector;
-mod shared_resources;
+mod shared;
 mod attack;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(shared_resources::SharedResourcesPlugin)
+        .add_plugins(shared::SharedResourcesPlugin)
         .add_plugins(ground::GroundPlugin)
         .add_plugins(player::PlayerPlugin)
         .add_plugins(selector::SelectorPlugin)

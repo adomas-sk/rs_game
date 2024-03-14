@@ -1,4 +1,4 @@
-use crate::shared_resources::Hydrogen;
+use crate::shared::Hydrogen;
 
 use super::super::buildings::gathering_post::GatheringPostBuilding;
 use super::super::resources::hydrogen::HydrogenResource;
