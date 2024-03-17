@@ -59,7 +59,7 @@ pub fn update_hydrogen_counter(
     mut text_query: Query<&mut Text, With<HydrogenCounter>>,
 ) {
     let mut text = text_query.single_mut();
-    text.sections[0].value = TRANSLATIONS.hydrogen.to_string() + &hydrogen.0.to_string();
+    text.sections[0].value = TRANSLATIONS.top_hydrogen.to_string() + &hydrogen.0.to_string();
 }
 
 pub fn update_minion_counter(
@@ -67,5 +67,5 @@ pub fn update_minion_counter(
     mut text_query: Query<&mut Text, With<MinionCounter>>,
 ) {
     let mut text = text_query.single_mut();
-    text.sections[0].value = TRANSLATIONS.minions.to_string() + &minion_inventory.gathering.to_string();
+    text.sections[0].value = TRANSLATIONS.top_minions.to_string() + &minion_inventory.gathering.to_string();
 }

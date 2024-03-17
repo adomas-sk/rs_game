@@ -30,7 +30,7 @@ const SPEED: f32 = 7.0;
 fn setup_minion(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(GatheringMinion {
-            work_timer: Timer::from_seconds(2.0, TimerMode::Repeating),
+            work_timer: Timer::from_seconds(1.0, TimerMode::Repeating),
             state: GatheringMinionState::GoingToResource,
             resource_gathered: 0,
         })

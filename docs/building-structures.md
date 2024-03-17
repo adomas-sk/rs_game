@@ -13,8 +13,8 @@
   - [x] Display assembleable minions in GUI
   - [x] Allow user to click on minion to build it
   - [x] Minion would be stored as inventory of some sort (should be reflected in GUI)
-- [ ] Create entity that would serve as Laboratory
+- [x] Create entity that would serve as Laboratory
   - [x] Display purchaseable power ups in GUI
   - [x] Allow user to click on powerup to gain it
-  - [ ] Powerupss displayed in GUI
+  - [x] Powerupss displayed in GUI
 - [ ] Display structure name when hovering in the world (and high light the structure?)

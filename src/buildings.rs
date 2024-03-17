@@ -6,7 +6,7 @@ pub mod events;
 pub mod gathering_post;
 pub mod laboratory;
 pub mod minion_assembly;
-mod shared;
+pub mod shared;
 
 pub struct BuildingsPlugin;
 

@@ -6,7 +6,7 @@ use crate::shared::{BuildingUI, Hydrogen, MinionInventory, PRICES, TRANSLATIONS}
 
 use super::{
     events::{DeselectBuilding, SelectMinionAssemblyBuilding},
-    shared::HIGHLIGHT_TINT,
+    shared::{PurchaseButton, HIGHLIGHT_TINT},
 };
 
 #[derive(Component)]
@@ -45,9 +45,6 @@ pub fn setup_minion_assembly_building(
 pub struct MinionAssemblyUI;
 
 #[derive(Component)]
-pub struct MinionAssemblyBuildButton;
-
-#[derive(Component)]
 pub struct MinionAssemblyBuildGathering;
 
 pub fn minion_assembly_ui(parent: &mut ChildBuilder<'_>) {
@@ -70,7 +67,7 @@ pub fn minion_assembly_ui(parent: &mut ChildBuilder<'_>) {
         .with_children(|parent| {
             parent.spawn((
                 TextBundle::from_section(
-                    TRANSLATIONS.minion_assembly,
+                    TRANSLATIONS.building_minion_assembly,
                     TextStyle {
                         font_size: 20.0,
                         color: Color::rgb(0.9, 0.9, 0.9),
@@ -81,7 +78,7 @@ pub fn minion_assembly_ui(parent: &mut ChildBuilder<'_>) {
             ));
             parent
                 .spawn((
-                    MinionAssemblyBuildButton,
+                    PurchaseButton(PRICES.gathering_minion),
                     MinionAssemblyBuildGathering,
                     ButtonBundle {
                         style: Style {
@@ -100,7 +97,7 @@ pub fn minion_assembly_ui(parent: &mut ChildBuilder<'_>) {
                 .with_children(|parent| {
                     parent.spawn((
                         TextBundle::from_section(
-                            TRANSLATIONS.gathering,
+                            TRANSLATIONS.building_gathering,
                             TextStyle {
                                 font_size: 14.0,
                                 color: Color::rgb(0.9, 0.9, 0.9),
@@ -112,7 +109,7 @@ pub fn minion_assembly_ui(parent: &mut ChildBuilder<'_>) {
                 });
             parent
                 .spawn((
-                    MinionAssemblyBuildButton,
+                    PurchaseButton(15),
                     ButtonBundle {
                         style: Style {
                             width: Val::Px(60.0),
@@ -143,75 +140,22 @@ pub fn minion_assembly_ui(parent: &mut ChildBuilder<'_>) {
         });
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
-const DISABLED_BUTTON: Color = Color::rgb(0.4, 0.4, 0.4);
-pub fn build_button_interaction(
-    hydrogen: Res<Hydrogen>,
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &mut BorderColor),
-        (Changed<Interaction>, With<MinionAssemblyBuildButton>),
-    >,
-) {
-    if hydrogen.0 < PRICES.gathering_minion {
-        return;
-    }
-    for (interaction, mut color, mut border_color) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = Color::RED;
-                return;
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
-                return;
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
-                return;
-            }
-        }
-    }
-}
-pub fn build_button_enablement(
-    hydrogen: Res<Hydrogen>,
-    mut button_query: Query<
-        (&mut BackgroundColor, &mut BorderColor),
-        With<MinionAssemblyBuildButton>,
-    >,
-) {
-    for (mut color, mut border_color) in &mut button_query {
-        if hydrogen.0 < PRICES.gathering_minion {
-            *color = DISABLED_BUTTON.into();
-            border_color.0 = Color::BLACK;
-            return;
-        } else {
-            *color = NORMAL_BUTTON.into();
-            border_color.0 = Color::BLACK;
-        }
-    }
-}
-
 pub fn handle_build_gathering(
     mut minion_inventory: ResMut<MinionInventory>,
     mut hydrogen: ResMut<Hydrogen>,
     interaction_query: Query<
-        &Interaction,
+        (&Interaction, &PurchaseButton),
         (Changed<Interaction>, With<MinionAssemblyBuildGathering>),
     >,
 ) {
-    if hydrogen.0 < PRICES.gathering_minion {
-        return;
-    }
-    let Ok(interaction) = interaction_query.get_single() else {
+    let Ok((interaction, price)) = interaction_query.get_single() else {
         return;
     };
+    if hydrogen.0 < price.0 {
+        return;
+    }
     if matches!(interaction, Interaction::Pressed) {
-        hydrogen.0 -= PRICES.gathering_minion;
+        hydrogen.0 -= price.0;
         minion_inventory.gathering += 1;
     }
 }

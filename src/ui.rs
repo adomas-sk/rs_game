@@ -4,28 +4,25 @@ use bevy_mod_picking::prelude::*;
 use crate::{
     buildings::{
         events::{DeselectBuilding, SelectLaboratoryBuilding, SelectMinionAssemblyBuilding},
-        laboratory::{
-            handle_purchase_powerup, laboratory_ui, purchase_button_enablement,
-            purchase_button_interaction, LaboratoryUI,
-        },
-        minion_assembly::{
-            build_button_enablement, build_button_interaction, handle_build_gathering,
-            minion_assembly_ui, MinionAssemblyUI,
-        },
+        laboratory::{handle_purchase_powerup, laboratory_ui, LaboratoryUI},
+        minion_assembly::{handle_build_gathering, minion_assembly_ui, MinionAssemblyUI},
+        shared::{purchase_button_enablement, purchase_button_interaction},
     },
     shared::BuildingUI,
 };
 
-use self::top_ui::{setup_top_ui, update_hydrogen_counter, update_minion_counter};
+use self::{
+    power_ups::{power_ups_toggle, setup_power_ups_ui, update_power_ups},
+    top_ui::{setup_top_ui, update_hydrogen_counter, update_minion_counter},
+};
 
+pub mod power_ups;
 pub mod top_ui;
 
 #[derive(Component)]
 pub struct BuildingUIContainer;
 
 pub struct UIPlugin;
-
-// For reference, remove later
 
 fn open_minion_assembly_ui(
     mut building_ui_query: Query<&mut Style, With<BuildingUIContainer>>,
@@ -60,8 +57,7 @@ fn close_building_ui(
     }
 }
 
-fn setup_ui(mut commands: Commands) {
-    // Building UI
+fn setup_buildings_ui(mut commands: Commands) {
     commands
         .spawn(BuildingUIContainer)
         .insert((
@@ -100,13 +96,13 @@ impl Plugin for UIPlugin {
             .add_systems(Startup, setup_top_ui)
             .add_systems(Update, (update_hydrogen_counter, update_minion_counter))
             // Building UI
-            .add_systems(Startup, setup_ui)
+            .add_systems(Startup, setup_buildings_ui)
             // Minion assembly building
             .add_systems(
                 Update,
                 (
-                    build_button_enablement,
-                    build_button_interaction.after(build_button_enablement),
+                    purchase_button_enablement,
+                    purchase_button_interaction.after(purchase_button_enablement),
                 ),
             )
             .add_systems(Update, handle_build_gathering)
@@ -115,18 +111,15 @@ impl Plugin for UIPlugin {
                 open_minion_assembly_ui.run_if(on_event::<SelectMinionAssemblyBuilding>()),
             )
             // Laboratory building
-            .add_systems(
-                Update,
-                (
-                    purchase_button_enablement,
-                    purchase_button_interaction.after(purchase_button_enablement),
-                ),
-            )
             .add_systems(Update, handle_purchase_powerup)
             .add_systems(
                 Update,
                 open_laboratory_ui.run_if(on_event::<SelectLaboratoryBuilding>()),
             )
+            // Power ups
+            .add_systems(Startup, setup_power_ups_ui)
+            .add_systems(Update, (power_ups_toggle, update_power_ups))
+            // Shared
             // Event handling
             .add_systems(
                 Update,

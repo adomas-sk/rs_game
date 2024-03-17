@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::shared::{BuildingUI, Hydrogen, PRICES, TRANSLATIONS};
+use crate::shared::{BuildingUI, Hydrogen, PowerUpInventory, PowerUps, PRICES, TRANSLATIONS};
 
 use super::{
     events::{DeselectBuilding, SelectLaboratoryBuilding},
-    shared::HIGHLIGHT_TINT,
+    shared::{PurchaseButton, HIGHLIGHT_TINT},
 };
 
 #[derive(Component)]
@@ -45,10 +45,7 @@ pub fn setup_laboratory_building(
 pub struct LaboratoryUI;
 
 #[derive(Component)]
-pub struct LaboratoryBuildButton;
-
-#[derive(Component)]
-pub struct LaboratoryBuildGathering;
+pub struct LaboratoryPurchase(PowerUps);
 
 pub fn laboratory_ui(parent: &mut ChildBuilder<'_>) {
     parent
@@ -70,7 +67,7 @@ pub fn laboratory_ui(parent: &mut ChildBuilder<'_>) {
         .with_children(|parent| {
             parent.spawn((
                 TextBundle::from_section(
-                    TRANSLATIONS.laboratory,
+                    TRANSLATIONS.building_laboratory,
                     TextStyle {
                         font_size: 20.0,
                         color: Color::rgb(0.9, 0.9, 0.9),
@@ -81,8 +78,8 @@ pub fn laboratory_ui(parent: &mut ChildBuilder<'_>) {
             ));
             parent
                 .spawn((
-                    LaboratoryBuildButton,
-                    LaboratoryBuildGathering,
+                    PurchaseButton(PRICES.power_up),
+                    LaboratoryPurchase(PowerUps::PowerUp1),
                     ButtonBundle {
                         style: Style {
                             width: Val::Px(140.0),
@@ -100,7 +97,69 @@ pub fn laboratory_ui(parent: &mut ChildBuilder<'_>) {
                 .with_children(|parent| {
                     parent.spawn((
                         TextBundle::from_section(
-                            TRANSLATIONS.power_up,
+                            TRANSLATIONS.building_powerup,
+                            TextStyle {
+                                font_size: 14.0,
+                                color: Color::rgb(0.9, 0.9, 0.9),
+                                ..default()
+                            },
+                        ),
+                        NoDeselect,
+                    ));
+                });
+            parent
+                .spawn((
+                    PurchaseButton(PRICES.power_up),
+                    LaboratoryPurchase(PowerUps::PowerUp2),
+                    ButtonBundle {
+                        style: Style {
+                            width: Val::Px(140.0),
+                            height: Val::Px(60.0),
+                            border: UiRect::all(Val::Px(2.0)),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            ..default()
+                        },
+                        border_color: BorderColor(Color::BLACK),
+                        ..default()
+                    },
+                    NoDeselect,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        TextBundle::from_section(
+                            TRANSLATIONS.building_powerup,
+                            TextStyle {
+                                font_size: 14.0,
+                                color: Color::rgb(0.9, 0.9, 0.9),
+                                ..default()
+                            },
+                        ),
+                        NoDeselect,
+                    ));
+                });
+            parent
+                .spawn((
+                    PurchaseButton(PRICES.power_up),
+                    LaboratoryPurchase(PowerUps::PowerUp3),
+                    ButtonBundle {
+                        style: Style {
+                            width: Val::Px(140.0),
+                            height: Val::Px(60.0),
+                            border: UiRect::all(Val::Px(2.0)),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            ..default()
+                        },
+                        border_color: BorderColor(Color::BLACK),
+                        ..default()
+                    },
+                    NoDeselect,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        TextBundle::from_section(
+                            TRANSLATIONS.building_powerup,
                             TextStyle {
                                 font_size: 14.0,
                                 color: Color::rgb(0.9, 0.9, 0.9),
@@ -113,68 +172,29 @@ pub fn laboratory_ui(parent: &mut ChildBuilder<'_>) {
         });
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
-const DISABLED_BUTTON: Color = Color::rgb(0.4, 0.4, 0.4);
-pub fn purchase_button_interaction(
-    hydrogen: Res<Hydrogen>,
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &mut BorderColor),
-        (Changed<Interaction>, With<LaboratoryBuildButton>),
-    >,
-) {
-    if hydrogen.0 < PRICES.power_up {
-        return;
-    }
-    for (interaction, mut color, mut border_color) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = Color::RED;
-                return;
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
-                return;
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
-                return;
-            }
-        }
-    }
-}
-pub fn purchase_button_enablement(
-    hydrogen: Res<Hydrogen>,
-    mut button_query: Query<(&mut BackgroundColor, &mut BorderColor), With<LaboratoryBuildButton>>,
-) {
-    for (mut color, mut border_color) in &mut button_query {
-        if hydrogen.0 < PRICES.power_up {
-            *color = DISABLED_BUTTON.into();
-            border_color.0 = Color::BLACK;
-            return;
-        } else {
-            *color = NORMAL_BUTTON.into();
-            border_color.0 = Color::BLACK;
-        }
-    }
-}
-
 pub fn handle_purchase_powerup(
+    mut powerup_inventory: ResMut<PowerUpInventory>,
     mut hydrogen: ResMut<Hydrogen>,
-    interaction_query: Query<&Interaction, (Changed<Interaction>, With<LaboratoryBuildGathering>)>,
+    interaction_query: Query<(&Interaction, &LaboratoryPurchase, &PurchaseButton), (Changed<Interaction>, With<LaboratoryPurchase>)>,
 ) {
-    if hydrogen.0 < PRICES.power_up {
-        return;
-    }
-    let Ok(interaction) = interaction_query.get_single() else {
+    let Ok((interaction, powerup, price)) = interaction_query.get_single() else {
         return;
     };
+    if hydrogen.0 < price.0 {
+        return;
+    }
     if matches!(interaction, Interaction::Pressed) {
-        hydrogen.0 -= PRICES.power_up;
-        println!("You powered up son");
+        hydrogen.0 -= price.0;
+        match powerup.0 {
+            PowerUps::PowerUp1 => {
+                powerup_inventory.powerup1 = true;
+            }
+            PowerUps::PowerUp2 => {
+                powerup_inventory.powerup2 = true;
+            }
+            PowerUps::PowerUp3 => {
+                powerup_inventory.powerup3 = true;
+            }
+        }
     }
 }
