@@ -2,33 +2,30 @@ use bevy::prelude::*;
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_rapier3d::prelude::*;
 
-mod enemy;
-mod ground;
-mod minions;
-mod resources;
-mod ui;
-mod buildings;
-mod player;
-mod selector;
-mod shared;
-mod attack;
+mod features;
+mod states;
 
 fn main() {
     App::new()
+        .init_state::<states::GameState>()
         .add_plugins(DefaultPlugins)
-        .add_plugins(shared::SharedResourcesPlugin)
-        .add_plugins(ground::GroundPlugin)
-        .add_plugins(player::PlayerPlugin)
-        .add_plugins(selector::SelectorPlugin)
-        // .add_plugins(minions::following::MinionPlugin)
-        .add_plugins(buildings::BuildingsPlugin)
-        .add_plugins(resources::ResourcesPlugin)
-        .add_plugins(minions::gathering::GatheringMinionPlugin)
-        .add_plugins(enemy::EnemyPlugin)
-        .add_plugins(attack::AttackPlugin)
-        .add_plugins(ui::UIPlugin)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(DefaultPickingPlugins)
+        // Splash
+        .add_plugins(features::splash::SplashPlugin)
+        // Game
+        .add_plugins(features::portal::PortalPlugin)
+        .add_plugins(features::shared::SharedResourcesPlugin)
+        .add_plugins(features::ground::GroundPlugin)
+        .add_plugins(features::player::PlayerPlugin)
+        .add_plugins(features::selector::SelectorPlugin)
+        // .add_plugins(features::minions::following::MinionPlugin)
+        .add_plugins(features::buildings::BuildingsPlugin)
+        .add_plugins(features::resources::ResourcesPlugin)
+        .add_plugins(features::minions::gathering::GatheringMinionPlugin)
+        .add_plugins(features::enemy::EnemyPlugin)
+        .add_plugins(features::attack::AttackPlugin)
+        .add_plugins(features::ui::UIPlugin)
         .run();
 }

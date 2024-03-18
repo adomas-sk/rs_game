@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::shared::{Hydrogen, MinionInventory, TRANSLATIONS};
+use crate::features::shared::{Hydrogen, MinionInventory, TRANSLATIONS};
 
 #[derive(Component)]
 pub struct HydrogenCounter;
@@ -41,16 +41,14 @@ pub fn setup_top_ui(mut commands: Commands) {
                         ..default()
                     },
                 ));
-            parent
-                .spawn(MinionCounter)
-                .insert(TextBundle::from_section(
-                    "Minion: 0",
-                    TextStyle {
-                        font_size: 20.0,
-                        color: Color::rgb(0.9, 0.9, 0.9),
-                        ..default()
-                    },
-                ));
+            parent.spawn(MinionCounter).insert(TextBundle::from_section(
+                "Minion: 0",
+                TextStyle {
+                    font_size: 20.0,
+                    color: Color::rgb(0.9, 0.9, 0.9),
+                    ..default()
+                },
+            ));
         });
 }
 
@@ -67,5 +65,6 @@ pub fn update_minion_counter(
     mut text_query: Query<&mut Text, With<MinionCounter>>,
 ) {
     let mut text = text_query.single_mut();
-    text.sections[0].value = TRANSLATIONS.top_minions.to_string() + &minion_inventory.gathering.to_string();
+    text.sections[0].value =
+        TRANSLATIONS.top_minions.to_string() + &minion_inventory.gathering.to_string();
 }

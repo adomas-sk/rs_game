@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::shared::{PowerUpInventory, PowerUps, TRANSLATIONS};
+use crate::features::shared::{PowerUpInventory, PowerUps, TRANSLATIONS};
 
 #[derive(Component)]
 pub struct PowerUpsUI;

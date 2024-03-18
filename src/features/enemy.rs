@@ -1,7 +1,9 @@
 use bevy::{ecs::query::QuerySingleError, prelude::*};
 use bevy_rapier3d::prelude::*;
 
-use crate::{minions::following::Minion, player::Player, shared::Gravity};
+use crate::states;
+
+use super::{minions::following::Minion, player::Player, shared::Gravity};
 
 pub struct EnemyPlugin;
 
@@ -19,7 +21,9 @@ fn setup_enemy(
     commands
         .spawn(Enemy)
         .insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(Cuboid { half_size: Vec3::splat(0.5) })),
+            mesh: meshes.add(Mesh::from(Cuboid {
+                half_size: Vec3::splat(0.5),
+            })),
             material: materials.add(Color::rgb_u8(255, 124, 124)),
             ..default()
         })
@@ -87,7 +91,10 @@ fn update_enemy(
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_enemy)
-            .add_systems(Update, update_enemy);
+        app.add_systems(OnEnter(states::GameState::Home), setup_enemy)
+            .add_systems(
+                Update,
+                update_enemy.run_if(in_state(states::GameState::Home)),
+            );
     }
 }

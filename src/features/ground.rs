@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use crate::states;
+
+use super::shared::despawn_component;
+
 pub struct GroundPlugin;
 
 #[derive(Component)]
@@ -27,21 +31,14 @@ fn setup_ground(
         .insert(RigidBody::Fixed)
         .insert(Collider::cuboid(20.0, 0.5, 20.0))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)));
-
-    // cube
-    commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(Cuboid::from_size(Vec3::splat(1.0)))),
-            material: materials.add(Color::rgb_u8(25, 25, 255)),
-            transform: Transform::from_xyz(0.0, 1.0, 0.0),
-            ..default()
-        })
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(0.5, 0.5, 0.5));
 }
 
 impl Plugin for GroundPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_ground);
+        app.add_systems(OnEnter(states::GameState::Home), setup_ground)
+            .add_systems(
+                OnExit(states::GameState::Home),
+                despawn_component::<Ground>,
+            );
     }
 }

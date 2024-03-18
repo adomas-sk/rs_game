@@ -2,13 +2,16 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::{
-        events::{DeselectBuilding, SelectLaboratoryBuilding, SelectMinionAssemblyBuilding},
-        laboratory::{handle_purchase_powerup, laboratory_ui, LaboratoryUI},
-        minion_assembly::{handle_build_gathering, minion_assembly_ui, MinionAssemblyUI},
-        shared::{purchase_button_enablement, purchase_button_interaction},
+    features::{
+        buildings::{
+            events::{DeselectBuilding, SelectLaboratoryBuilding, SelectMinionAssemblyBuilding},
+            laboratory::{handle_purchase_powerup, laboratory_ui, LaboratoryUI},
+            minion_assembly::{handle_build_gathering, minion_assembly_ui, MinionAssemblyUI},
+            shared::{purchase_button_enablement, purchase_button_interaction},
+        },
+        shared::BuildingUI,
     },
-    shared::BuildingUI,
+    states,
 };
 
 use self::{
@@ -93,37 +96,63 @@ impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
         app
             // Top
-            .add_systems(Startup, setup_top_ui)
-            .add_systems(Update, (update_hydrogen_counter, update_minion_counter))
+            .add_systems(OnEnter(states::GameState::Home), setup_top_ui)
+            .add_systems(
+                Update,
+                (
+                    update_hydrogen_counter.run_if(in_state(states::GameState::Home)),
+                    update_minion_counter.run_if(in_state(states::GameState::Home)),
+                ),
+            )
             // Building UI
-            .add_systems(Startup, setup_buildings_ui)
+            .add_systems(OnEnter(states::GameState::Home), setup_buildings_ui)
             // Minion assembly building
             .add_systems(
                 Update,
                 (
-                    purchase_button_enablement,
-                    purchase_button_interaction.after(purchase_button_enablement),
+                    purchase_button_enablement.run_if(in_state(states::GameState::Home)),
+                    purchase_button_interaction
+                        .after(purchase_button_enablement)
+                        .run_if(in_state(states::GameState::Home)),
                 ),
             )
-            .add_systems(Update, handle_build_gathering)
             .add_systems(
                 Update,
-                open_minion_assembly_ui.run_if(on_event::<SelectMinionAssemblyBuilding>()),
+                handle_build_gathering.run_if(in_state(states::GameState::Home)),
+            )
+            .add_systems(
+                Update,
+                open_minion_assembly_ui
+                    .run_if(on_event::<SelectMinionAssemblyBuilding>())
+                    .run_if(in_state(states::GameState::Home)),
             )
             // Laboratory building
-            .add_systems(Update, handle_purchase_powerup)
             .add_systems(
                 Update,
-                open_laboratory_ui.run_if(on_event::<SelectLaboratoryBuilding>()),
+                handle_purchase_powerup.run_if(in_state(states::GameState::Home)),
+            )
+            .add_systems(
+                Update,
+                open_laboratory_ui
+                    .run_if(on_event::<SelectLaboratoryBuilding>())
+                    .run_if(in_state(states::GameState::Home)),
             )
             // Power ups
-            .add_systems(Startup, setup_power_ups_ui)
-            .add_systems(Update, (power_ups_toggle, update_power_ups))
+            .add_systems(OnEnter(states::GameState::Home), setup_power_ups_ui)
+            .add_systems(
+                Update,
+                (
+                    power_ups_toggle.run_if(in_state(states::GameState::Home)),
+                    update_power_ups.run_if(in_state(states::GameState::Home)),
+                ),
+            )
             // Shared
             // Event handling
             .add_systems(
                 Update,
-                close_building_ui.run_if(on_event::<DeselectBuilding>()),
+                close_building_ui
+                    .run_if(on_event::<DeselectBuilding>())
+                    .run_if(in_state(states::GameState::Home)),
             );
     }
 }

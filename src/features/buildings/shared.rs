@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use crate::shared::Hydrogen;
+use crate::features::shared::Hydrogen;
 
 pub const HIGHLIGHT_TINT: Highlight<StandardMaterial> = Highlight {
     hovered: Some(HighlightKind::new_dynamic(|matl| StandardMaterial {

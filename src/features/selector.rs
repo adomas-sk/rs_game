@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::ground::Ground;
+use crate::{features::ground::Ground, states};
 
 pub struct SelectorPlugin;
 
@@ -43,6 +43,9 @@ fn draw_selector(
 
 impl Plugin for SelectorPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, draw_selector);
+        app.add_systems(
+            Update,
+            draw_selector.run_if(in_state(states::GameState::Home)),
+        );
     }
 }

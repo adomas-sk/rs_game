@@ -3,7 +3,12 @@ use std::time::Duration;
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier3d::prelude::*;
 
-use crate::{attack::spawn_projectile, shared::Gravity};
+use crate::{
+    features::{attack::spawn_projectile, shared::Gravity},
+    states,
+};
+
+use super::shared::despawn_component;
 
 pub struct PlayerPlugin;
 
@@ -209,14 +214,33 @@ impl Plugin for PlayerPlugin {
                 y: 4.0,
                 z: 2.0,
             }))
-            .add_systems(Startup, setup_player)
-            .add_systems(Update, move_player)
-            .add_systems(Update, create_projectile)
+            .add_systems(OnEnter(states::GameState::Home), setup_player)
+            .add_systems(
+                Update,
+                move_player.run_if(in_state(states::GameState::Home)),
+            )
+            .add_systems(
+                Update,
+                create_projectile.run_if(in_state(states::GameState::Home)),
+            )
             .add_systems(
                 PostUpdate,
                 follow_player
                     .after(PhysicsSet::Writeback)
-                    .before(TransformSystem::TransformPropagate),
+                    .before(TransformSystem::TransformPropagate)
+                    .run_if(in_state(states::GameState::Home)),
+            )
+            .add_systems(
+                OnExit(states::GameState::Home),
+                despawn_component::<Player>,
+            )
+            .add_systems(
+                OnExit(states::GameState::Home),
+                despawn_component::<PointLight>,
+            )
+            .add_systems(
+                OnExit(states::GameState::Home),
+                despawn_component::<Camera>,
             );
     }
 }

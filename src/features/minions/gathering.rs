@@ -1,4 +1,5 @@
-use crate::shared::Hydrogen;
+use crate::features::shared::Hydrogen;
+use crate::states;
 
 use super::super::buildings::gathering_post::GatheringPostBuilding;
 use super::super::resources::hydrogen::HydrogenResource;
@@ -10,6 +11,7 @@ pub struct GatheringMinionPlugin;
 #[derive(Component)]
 struct GatheringMinionModel;
 
+#[derive(Debug)]
 enum GatheringMinionState {
     GoingToResource = 0,
     Gathering = 1,
@@ -63,7 +65,7 @@ fn find_and_go_to<'a, I>(
 ) where
     I: Iterator<Item = &'a GlobalTransform>,
 {
-    let nearest_resource = {
+    let (nearest_resource, distance) = {
         let mut closest_resource_transform: Option<&GlobalTransform> = None;
         let mut smallest_distance: f32 = f32::MAX;
         for resource in target_transform_query {
@@ -75,15 +77,12 @@ fn find_and_go_to<'a, I>(
                 smallest_distance = distance;
             }
         }
-        closest_resource_transform
+        (closest_resource_transform, smallest_distance)
     };
 
     // Go to nearest resource
     match nearest_resource {
         Some(transform) => {
-            let distance = transform
-                .translation()
-                .distance(minion_glob_transform.translation());
             // If closeby, start gathering
             if distance < 2.0 {
                 minion.state = next_state;
@@ -92,7 +91,10 @@ fn find_and_go_to<'a, I>(
                 (transform.translation() - minion_glob_transform.translation()).normalize();
             controller.translation = Some(direction * SPEED * time.delta_seconds());
         }
-        None => return,
+        None => {
+            println!("Could not find nearest resource");
+            return;
+        }
     }
 }
 
@@ -152,7 +154,10 @@ fn update_minion(
 
 impl Plugin for GatheringMinionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_minion)
-            .add_systems(Update, update_minion);
+        app.add_systems(OnEnter(states::GameState::Home), setup_minion)
+            .add_systems(
+                Update,
+                update_minion.run_if(in_state(states::GameState::Home)),
+            );
     }
 }
