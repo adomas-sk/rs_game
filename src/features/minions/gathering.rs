@@ -1,4 +1,4 @@
-use crate::features::shared::Hydrogen;
+use crate::features::shared::{despawn_component, Hydrogen};
 use crate::states;
 
 use super::super::buildings::gathering_post::GatheringPostBuilding;
@@ -158,6 +158,10 @@ impl Plugin for GatheringMinionPlugin {
             .add_systems(
                 Update,
                 update_minion.run_if(in_state(states::GameState::Home)),
+            )
+            .add_systems(
+                OnExit(states::GameState::Home),
+                despawn_component::<GatheringMinion>,
             );
     }
 }

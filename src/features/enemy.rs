@@ -3,7 +3,11 @@ use bevy_rapier3d::prelude::*;
 
 use crate::states;
 
-use super::{minions::following::Minion, player::Player, shared::Gravity};
+use super::{
+    minions::following::Minion,
+    player::Player,
+    shared::{despawn_component, Gravity},
+};
 
 pub struct EnemyPlugin;
 
@@ -95,6 +99,7 @@ impl Plugin for EnemyPlugin {
             .add_systems(
                 Update,
                 update_enemy.run_if(in_state(states::GameState::Home)),
-            );
+            )
+            .add_systems(OnExit(states::GameState::Home), despawn_component::<Enemy>);
     }
 }

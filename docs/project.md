@@ -16,7 +16,7 @@ Player should be able to enter portal and access instance where he can fight ene
 
 ![Portalling to fighting arena mockup](./images/image2.png)
 
-### NPC combat system
+### Minion combat system
 
 Player should be able to spawn minions that will fight for player
 
@@ -24,11 +24,11 @@ Initialy:
 - Guardian minions (tank) - guards player
 - Offence minions (dps) - attacks enemies
 
-Dependencies: [Enemy NPC combat system](#enemy-npc-combat-system)
+Dependencies: [Enemy combat system](#enemy-combat-system)
 
 ![Minions fighting mockup](./images/image3.png)
 
-### Enemy NPC combat system
+### Enemy combat system
 
 Enemies should attack player.
 
@@ -38,7 +38,7 @@ Enemy types:
 - Melee (close range)
 - Ranged (projectile attacks)
 
-Dependencies: [NPC combat system](#npc-combat-system)
+Dependencies: [Minion combat system](#minion-combat-system)
 
 ### Building structures
 

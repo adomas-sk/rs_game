@@ -215,9 +215,14 @@ impl Plugin for PlayerPlugin {
                 z: 2.0,
             }))
             .add_systems(OnEnter(states::GameState::Home), setup_player)
+            .add_systems(OnEnter(states::GameState::Arena), setup_player)
             .add_systems(
                 Update,
                 move_player.run_if(in_state(states::GameState::Home)),
+            )
+            .add_systems(
+                Update,
+                move_player.run_if(in_state(states::GameState::Arena)),
             )
             .add_systems(
                 Update,
@@ -231,15 +236,28 @@ impl Plugin for PlayerPlugin {
                     .run_if(in_state(states::GameState::Home)),
             )
             .add_systems(
-                OnExit(states::GameState::Home),
-                despawn_component::<Player>,
+                PostUpdate,
+                follow_player
+                    .after(PhysicsSet::Writeback)
+                    .before(TransformSystem::TransformPropagate)
+                    .run_if(in_state(states::GameState::Arena)),
             )
+            .add_systems(OnExit(states::GameState::Home), despawn_component::<Player>)
             .add_systems(
                 OnExit(states::GameState::Home),
                 despawn_component::<PointLight>,
             )
+            .add_systems(OnExit(states::GameState::Home), despawn_component::<Camera>)
             .add_systems(
-                OnExit(states::GameState::Home),
+                OnExit(states::GameState::Arena),
+                despawn_component::<Player>,
+            )
+            .add_systems(
+                OnExit(states::GameState::Arena),
+                despawn_component::<PointLight>,
+            )
+            .add_systems(
+                OnExit(states::GameState::Arena),
                 despawn_component::<Camera>,
             );
     }

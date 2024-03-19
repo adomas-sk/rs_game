@@ -2,7 +2,14 @@ use bevy::prelude::*;
 
 use crate::states;
 
-use self::events::{DeselectBuilding, SelectLaboratoryBuilding, SelectMinionAssemblyBuilding};
+use self::{
+    events::{DeselectBuilding, SelectLaboratoryBuilding, SelectMinionAssemblyBuilding},
+    gathering_post::GatheringPostBuilding,
+    laboratory::LaboratoryBuilding,
+    minion_assembly::MinionAssemblyBuilding,
+};
+
+use super::shared::despawn_component;
 
 pub mod events;
 pub mod gathering_post;
@@ -28,6 +35,18 @@ impl Plugin for BuildingsPlugin {
         )
         .add_event::<DeselectBuilding>()
         .add_event::<SelectMinionAssemblyBuilding>()
-        .add_event::<SelectLaboratoryBuilding>();
+        .add_event::<SelectLaboratoryBuilding>()
+        .add_systems(
+            OnExit(states::GameState::Home),
+            despawn_component::<GatheringPostBuilding>,
+        )
+        .add_systems(
+            OnExit(states::GameState::Home),
+            despawn_component::<MinionAssemblyBuilding>,
+        )
+        .add_systems(
+            OnExit(states::GameState::Home),
+            despawn_component::<LaboratoryBuilding>,
+        );
     }
 }

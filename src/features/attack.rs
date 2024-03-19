@@ -3,6 +3,8 @@ use bevy_rapier3d::prelude::*;
 
 use crate::states;
 
+use super::shared::despawn_component;
+
 pub struct AttackPlugin;
 
 #[derive(Component)]
@@ -57,6 +59,10 @@ impl Plugin for AttackPlugin {
         app.add_systems(
             Update,
             update_projectile.run_if(in_state(states::GameState::Home)),
+        )
+        .add_systems(
+            OnExit(states::GameState::Home),
+            despawn_component::<Projectile>,
         );
     }
 }

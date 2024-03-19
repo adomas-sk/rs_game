@@ -61,7 +61,7 @@ pub fn purchase_button_interaction(
     }
 }
 
-// Only run this on getting enough hydrogen and on click
+// TODO: Only run this on getting enough hydrogen and on click
 pub fn purchase_button_enablement(
     hydrogen: Res<Hydrogen>,
     mut button_query: Query<

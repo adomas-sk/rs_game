@@ -3,13 +3,13 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::states;
+use crate::states::{self, GameState};
 
-use super::shared::despawn_component;
+use super::{player::Player, shared::despawn_component};
 
 pub struct PortalPlugin;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Portal;
 
 fn setup_portal(
@@ -42,13 +42,49 @@ fn update_portal(
     }
 }
 
+fn enter_portal(
+    current_state: Res<State<GameState>>,
+    mut game_state: ResMut<NextState<GameState>>,
+    controller_output_query: Query<&KinematicCharacterControllerOutput, With<Player>>,
+    portal_query: Query<&Portal>,
+) {
+    for output in &controller_output_query {
+        for collision in &output.collisions {
+            if let Ok(_portal) = portal_query.get(collision.entity) {
+                if *current_state.get() == states::GameState::Home {
+                    game_state.set(states::GameState::Arena);
+                } else {
+                    game_state.set(states::GameState::Home);
+                }
+            }
+        }
+    }
+}
+
 impl Plugin for PortalPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(states::GameState::Home), setup_portal)
+            .add_systems(OnEnter(states::GameState::Arena), setup_portal)
             .add_systems(
                 Update,
                 update_portal.run_if(in_state(states::GameState::Home)),
             )
-            .add_systems(OnExit(states::GameState::Home), despawn_component::<Portal>);
+            .add_systems(
+                Update,
+                update_portal.run_if(in_state(states::GameState::Arena)),
+            )
+            .add_systems(
+                Update,
+                enter_portal.run_if(in_state(states::GameState::Home)),
+            )
+            .add_systems(
+                Update,
+                enter_portal.run_if(in_state(states::GameState::Arena)),
+            )
+            .add_systems(OnExit(states::GameState::Home), despawn_component::<Portal>)
+            .add_systems(
+                OnExit(states::GameState::Arena),
+                despawn_component::<Portal>,
+            );
     }
 }

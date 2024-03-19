@@ -20,7 +20,6 @@ fn main() {
         .add_plugins(features::ground::GroundPlugin)
         .add_plugins(features::player::PlayerPlugin)
         .add_plugins(features::selector::SelectorPlugin)
-        // .add_plugins(features::minions::following::MinionPlugin)
         .add_plugins(features::buildings::BuildingsPlugin)
         .add_plugins(features::resources::ResourcesPlugin)
         .add_plugins(features::minions::gathering::GatheringMinionPlugin)

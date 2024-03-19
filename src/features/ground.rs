@@ -36,8 +36,10 @@ fn setup_ground(
 impl Plugin for GroundPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(states::GameState::Home), setup_ground)
+            .add_systems(OnExit(states::GameState::Home), despawn_component::<Ground>)
+            .add_systems(OnEnter(states::GameState::Arena), setup_ground)
             .add_systems(
-                OnExit(states::GameState::Home),
+                OnExit(states::GameState::Arena),
                 despawn_component::<Ground>,
             );
     }

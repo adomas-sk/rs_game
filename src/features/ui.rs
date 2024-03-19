@@ -15,9 +15,11 @@ use crate::{
 };
 
 use self::{
-    power_ups::{power_ups_toggle, setup_power_ups_ui, update_power_ups},
-    top_ui::{setup_top_ui, update_hydrogen_counter, update_minion_counter},
+    power_ups::{power_ups_toggle, setup_power_ups_ui, update_power_ups, PowerUpsUI},
+    top_ui::{setup_top_ui, update_hydrogen_counter, update_minion_counter, TopUI},
 };
+
+use super::shared::despawn_component;
 
 pub mod power_ups;
 pub mod top_ui;
@@ -104,6 +106,7 @@ impl Plugin for UIPlugin {
                     update_minion_counter.run_if(in_state(states::GameState::Home)),
                 ),
             )
+            .add_systems(OnExit(states::GameState::Home), despawn_component::<TopUI>)
             // Building UI
             .add_systems(OnEnter(states::GameState::Home), setup_buildings_ui)
             // Minion assembly building
@@ -137,6 +140,10 @@ impl Plugin for UIPlugin {
                     .run_if(on_event::<SelectLaboratoryBuilding>())
                     .run_if(in_state(states::GameState::Home)),
             )
+            .add_systems(
+                OnExit(states::GameState::Home),
+                despawn_component::<BuildingUIContainer>,
+            )
             // Power ups
             .add_systems(OnEnter(states::GameState::Home), setup_power_ups_ui)
             .add_systems(
@@ -145,6 +152,10 @@ impl Plugin for UIPlugin {
                     power_ups_toggle.run_if(in_state(states::GameState::Home)),
                     update_power_ups.run_if(in_state(states::GameState::Home)),
                 ),
+            )
+            .add_systems(
+                OnExit(states::GameState::Home),
+                despawn_component::<PowerUpsUI>,
             )
             // Shared
             // Event handling
