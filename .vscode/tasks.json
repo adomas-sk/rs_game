@@ -22,6 +22,29 @@
       "args": ["install", "--path", "."],
       "problemMatcher": ["$rustc"],
       "label": "Rust: cargo install"
+    },
+    {
+      "type": "shell",
+      "command": "cargo",
+      "args": ["build", "--release", "--target", "wasm32-unknown-unknown"],
+      "problemMatcher": ["$rustc"],
+      "label": "Rust: build for wasm"
+    },
+    {
+      "type": "shell",
+      "command": "wasm-bindgen",
+      "args": [
+        "--no-typescript",
+        "--target",
+        "web",
+        "--out-dir",
+        "./web/",
+        "--out-name",
+        "rs_game",
+        "./target/wasm32-unknown-unknown/release/rs-game.wasm"
+      ],
+      "problemMatcher": ["$rustc"],
+      "label": "wasm: bingen"
     }
   ]
 }
