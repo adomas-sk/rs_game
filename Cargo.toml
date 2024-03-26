@@ -3,6 +3,13 @@ name = "rs-game"
 version = "0.1.0"
 edition = "2021"
 
+[profile.web]
+opt-level = "s"
+inherits = "release"
+
+[profile.web.package."*"]
+opt-level = "s"
+
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1

@@ -26,7 +26,13 @@
     {
       "type": "shell",
       "command": "cargo",
-      "args": ["build", "--release", "--target", "wasm32-unknown-unknown"],
+      "args": [
+        "build",
+        "--profile",
+        "web",
+        "--target",
+        "wasm32-unknown-unknown",
+      ],
       "problemMatcher": ["$rustc"],
       "label": "Rust: build for wasm"
     },
