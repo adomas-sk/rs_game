@@ -11,15 +11,15 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(states::GameState::Home),
-            ranged::setup_ranged_enemy(Transform::from_xyz(-10.0, 2.0, -10.0)),
+            OnEnter(states::GameState::Arena),
+            ranged::spawn_ranged_enemies,
         )
         .add_systems(
             Update,
-            ranged::update_ranged_enemy.run_if(in_state(states::GameState::Home)),
+            ranged::update_ranged_enemy.run_if(in_state(states::GameState::Arena)),
         )
         .add_systems(
-            OnExit(states::GameState::Home),
+            OnExit(states::GameState::Arena),
             despawn_component::<ranged::RangedEnemy>,
         );
     }

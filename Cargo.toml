@@ -18,4 +18,5 @@ bevy_dylib = { version = "0.13.0" }
 bevy = { version = "0.13.1" }
 bevy_mod_picking = "0.18.2"
 bevy_rapier3d = { version = "0.25.0" }
+fast_poisson = { version = "1.0.0", features = ["single_precision"] }
 rand = "0.8.5"

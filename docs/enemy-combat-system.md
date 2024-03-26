@@ -7,7 +7,7 @@
 #### Stage 1
 
 - [ ] Create enemy mesh
-- [ ] Create algo to create enemies in Arena
+- [x] Create algo to create enemies in Arena
 - [ ] Close by enemies notice player or player-minion and attack
 - [ ] Create ranged attack for enemy
 - [ ] Create health points
