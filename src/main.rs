@@ -23,7 +23,7 @@ fn main() {
         .add_plugins(features::buildings::BuildingsPlugin)
         .add_plugins(features::resources::ResourcesPlugin)
         .add_plugins(features::minions::gathering::GatheringMinionPlugin)
-        .add_plugins(features::enemy::EnemyPlugin)
+        .add_plugins(features::enemies::EnemyPlugin)
         .add_plugins(features::attack::AttackPlugin)
         .add_plugins(features::ui::UIPlugin)
         .run();

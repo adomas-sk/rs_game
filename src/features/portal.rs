@@ -25,9 +25,10 @@ fn setup_portal(
                 material: materials.add(Color::rgb(0.9, 0.1, 0.1)),
                 ..default()
             },
-            RigidBody::Fixed,
             Collider::ball(1.0),
         ))
+        .insert(Sensor)
+        .insert(ActiveCollisionTypes::default() | ActiveCollisionTypes::KINEMATIC_STATIC)
         .insert(TransformBundle::from(Transform::from_xyz(10.0, 1.0, 10.0)));
 }
 
@@ -43,22 +44,25 @@ fn update_portal(
 }
 
 fn enter_portal(
+    rapier_context: Res<RapierContext>,
     current_state: Res<State<GameState>>,
     mut game_state: ResMut<NextState<GameState>>,
-    controller_output_query: Query<&KinematicCharacterControllerOutput, With<Player>>,
-    portal_query: Query<&Portal>,
+    portal_query: Query<Entity, With<Portal>>,
+    player_query: Query<Entity, With<Player>>,
 ) {
-    for output in &controller_output_query {
-        for collision in &output.collisions {
-            if let Ok(_portal) = portal_query.get(collision.entity) {
-                if *current_state.get() == states::GameState::Home {
-                    game_state.set(states::GameState::Arena);
-                } else {
-                    game_state.set(states::GameState::Home);
-                }
-            }
+    let Ok(player) = player_query.get_single() else {
+        return;
+    };
+    let Ok(portal) = portal_query.get_single() else {
+        return;
+    };
+    if rapier_context.intersection_pair(player, portal) == Some(true) {
+        if *current_state.get() == states::GameState::Home {
+            game_state.set(states::GameState::Arena);
+        } else {
+            game_state.set(states::GameState::Home);
         }
-    }
+    };
 }
 
 impl Plugin for PortalPlugin {
@@ -67,19 +71,15 @@ impl Plugin for PortalPlugin {
             .add_systems(OnEnter(states::GameState::Arena), setup_portal)
             .add_systems(
                 Update,
-                update_portal.run_if(in_state(states::GameState::Home)),
+                update_portal.run_if(
+                    in_state(states::GameState::Home).or_else(in_state(states::GameState::Arena)),
+                ),
             )
             .add_systems(
                 Update,
-                update_portal.run_if(in_state(states::GameState::Arena)),
-            )
-            .add_systems(
-                Update,
-                enter_portal.run_if(in_state(states::GameState::Home)),
-            )
-            .add_systems(
-                Update,
-                enter_portal.run_if(in_state(states::GameState::Arena)),
+                enter_portal.run_if(
+                    in_state(states::GameState::Home).or_else(in_state(states::GameState::Arena)),
+                ),
             )
             .add_systems(OnExit(states::GameState::Home), despawn_component::<Portal>)
             .add_systems(

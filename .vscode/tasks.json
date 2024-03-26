@@ -1,15 +1,27 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "cargo",
-			"command": "run",
-			"args": ["--features", "bevy/dynamic_linking"],
-			"problemMatcher": [
-				"$rustc"
-			],
-			"group": "build",
-			"label": "rust: cargo run"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "command": "cargo",
+      "args": ["run", "--features", "bevy/dynamic_linking"],
+      "problemMatcher": ["$rustc"],
+      "group": "build",
+      "label": "Rust: default run"
+    },
+    {
+      "type": "shell",
+      "command": "cargo",
+      "args": ["run", "--features", "bevy/dynamic_linking"],
+      "problemMatcher": ["$rustc"],
+      "label": "Rust: cargo run"
+    },
+    {
+      "type": "shell",
+      "command": "cargo",
+      "args": ["install", "--path", "."],
+      "problemMatcher": ["$rustc"],
+      "label": "Rust: cargo install"
+    }
+  ]
 }

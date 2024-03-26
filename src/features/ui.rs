@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::query::QueryFilter, prelude::*};
 use bevy_mod_picking::prelude::*;
 
 use crate::{
@@ -29,25 +29,28 @@ pub struct BuildingUIContainer;
 
 pub struct UIPlugin;
 
-fn open_minion_assembly_ui(
-    mut building_ui_query: Query<&mut Style, With<BuildingUIContainer>>,
-    mut building_query: Query<&mut Style, (With<MinionAssemblyUI>, Without<BuildingUIContainer>)>,
+fn open_building_ui<T: QueryFilter, U: QueryFilter>(
+    mut building_ui: Query<&mut Style, T>,
+    mut building: Query<&mut Style, U>,
 ) {
-    let mut style = building_ui_query.single_mut();
+    let mut style = building_ui.single_mut();
     style.display = Display::Flex;
 
-    let mut ms_style = building_query.single_mut();
+    let mut ms_style = building.single_mut();
     ms_style.display = Display::Flex;
 }
-fn open_laboratory_ui(
-    mut building_ui_query: Query<&mut Style, With<BuildingUIContainer>>,
-    mut building_query: Query<&mut Style, (With<LaboratoryUI>, Without<BuildingUIContainer>)>,
-) {
-    let mut style = building_ui_query.single_mut();
-    style.display = Display::Flex;
 
-    let mut ms_style = building_query.single_mut();
-    ms_style.display = Display::Flex;
+fn open_minion_assembly_ui(
+    building_ui_query: Query<&mut Style, With<BuildingUIContainer>>,
+    building_query: Query<&mut Style, (With<MinionAssemblyUI>, Without<BuildingUIContainer>)>,
+) {
+    open_building_ui(building_ui_query, building_query);
+}
+fn open_laboratory_ui(
+    building_ui_query: Query<&mut Style, With<BuildingUIContainer>>,
+    building_query: Query<&mut Style, (With<LaboratoryUI>, Without<BuildingUIContainer>)>,
+) {
+    open_building_ui(building_ui_query, building_query);
 }
 
 fn close_building_ui(
@@ -68,6 +71,7 @@ fn setup_buildings_ui(mut commands: Commands) {
         .insert((
             NodeBundle {
                 style: Style {
+                    position_type: PositionType::Absolute,
                     top: Val::Px(64.0),
                     display: Display::None,
                     width: Val::Px(320.0),

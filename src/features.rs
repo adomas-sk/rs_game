@@ -3,7 +3,7 @@ pub mod splash;
 pub mod portal;
 pub mod attack;
 pub mod buildings;
-pub mod enemy;
+pub mod enemies;
 pub mod ground;
 pub mod minions;
 pub mod player;
